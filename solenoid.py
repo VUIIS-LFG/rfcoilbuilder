@@ -348,27 +348,7 @@ def _run(P):
     figs.append({"title": "Developed view", "caption": "Each groove unrolled: how many turns stack up and in which direction.",
                  "png": png(fig)})
 
-    # 4. end view
-    idx = int(np.argmax(np.abs(n_windings)))
-    fig, ax = plt.subplots(figsize=(6, 6))
-    t = np.linspace(0, 2 * np.pi, 200)
-    ax.plot(Rm * np.cos(t), Rm * np.sin(t), color="saddlebrown", lw=2, label=f"Former ID ({2*Rm:.0f} mm)")
-    ax.plot(r_outer * np.cos(t), r_outer * np.sin(t), color="gray", ls="--", lw=1, label=f"Max OD ({2*r_outer:.1f} mm)")
-    for w in range(abs(int(n_windings[idx]))):
-        rw = Rm + ftm + wdm * (w + .5)
-        c = BLUE if n_windings[idx] > 0 else VERM
-        for k in range(24):
-            a = 2 * np.pi * k / 24
-            ax.add_patch(plt.Circle((rw * np.cos(a), rw * np.sin(a)), wire_vis * .7, fc=c, ec="black", lw=.3, alpha=.7))
-    ax.set_aspect("equal"); lim = r_outer + 2
-    ax.set_xlim(-lim, lim); ax.set_ylim(-lim, lim)
-    ax.set_xlabel("y (mm)"); ax.set_ylabel("z (mm)")
-    ax.set_title(f"End view (groove {idx+1}, {int(n_windings[idx]):+d} turns)")
-    ax.legend(loc="upper right", fontsize=8); ax.grid(alpha=.2)
-    fig.tight_layout()
-    figs.append({"title": "End view", "caption": "Looking down the axis at the busiest groove.", "png": png(fig)})
-
-    # 5. B1 field map
+    # 4. B1 field map
     x_map, y_map, B1 = b1_field_map(groove_positions, n_windings, coil_radius, former_thickness, wire_ins, coil_length, res_map)
     fig, axs = plt.subplots(2, 1, figsize=(11, 8))
     ax = axs[0]
@@ -386,7 +366,7 @@ def _run(P):
     figs.append({"title": "B1 field map", "caption": "Field inside and around the coil, computed loop by loop (Biot-Savart).",
                  "png": png(fig)})
 
-    # 6. inductance matrices
+    # 5. inductance matrices
     if L_mat is not None:
         fig, ax = plt.subplots(figsize=(6, 5))
         im = ax.imshow(L_mat * 1e6, cmap="viridis", origin="lower")
