@@ -4,124 +4,72 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>RF Coil Builder</title>
-  <style>
-    /* Colors from the Okabe-Ito palette, which is safe for most types of color blindness */
-    :root {
-      --ink: #1d2733; 
-      --paper: #f7f8fa;
-      --panel: #ffffff;
-      --line: #c9d1da;
-      --blue: #0072B2;
-      --orange: #E69F00;
-      --sky: #56B4E9;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
-      color: var(--ink);
-      background: var(--paper);
-      line-height: 1.6;
-    }
-    header {
-      padding: 2.5rem 1.5rem 1rem;
-      max-width: 52rem;
-      margin: 0 auto;
-    }
-    h1 { margin: 0 0 0.25rem; font-size: 2.2rem; }
-    header p { margin: 0; max-width: 60ch; }
-    nav {
-      max-width: 52rem;
-      margin: 1.5rem auto 0;
-      padding: 0 1.5rem;
-      display: flex;
-      gap: 0.5rem;
-      border-bottom: 2px solid var(--line);
-    }
-    nav button {
-      font: inherit;
-      padding: 0.6rem 1rem;
-      border: 2px solid transparent;
-      border-bottom: none;
-      background: none;
-      color: var(--ink);
-      cursor: pointer;
-    }
-    nav button[aria-selected="true"] {
-      background: var(--panel);
-      border-color: var(--line);
-      border-bottom: 3px solid var(--blue);
-      font-weight: bold;
-    }
-    nav button:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
-    main { max-width: 52rem; margin: 0 auto; padding: 1.5rem; }
-    section[hidden] { display: none; }
-    .placeholder {
-      border: 2px dashed var(--line);
-      background: var(--panel);
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-    }
-    .placeholder h2 { margin-top: 0; font-size: 1.2rem; }
-    .badge {
-      display: inline-block;
-      padding: 0.1rem 0.6rem;
-      border: 2px solid var(--orange);
-      background: #fff6e0;
-      font-size: 0.9rem;
-    }
-    .note {
-      border-left: 5px solid var(--blue);
-      background: var(--panel);
-      padding: 0.75rem 1rem;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>RF Coil Builder</h1>
-    <p>Design and view radio-frequency coils for low-field MRI systems.</p>
+  <header class="top">
+    <div>
+      <h1>RF Coil Builder</h1>
+      <p>Design the winding pattern for a low-field MRI radio-frequency coil, then see how to build it.</p>
+    </div>
+    <svg id="motif" viewBox="0 0 300 60" role="img" aria-label="Wire cross-sections above and below a coil former"></svg>
   </header>
 
-  <nav role="tablist" aria-label="Site sections">
-    <button role="tab" aria-selected="true" aria-controls="tab-coil" id="btn-coil">Coil viewer</button>
-    <button role="tab" aria-selected="false" aria-controls="tab-about" id="btn-about">About</button>
-    <button role="tab" aria-selected="false" aria-controls="tab-dev" id="btn-dev">Under development</button>
+  <p id="engine" class="engine" role="status">Starting the Python engine...</p>
+
+  <nav class="tabs" role="tablist" aria-label="Coil types">
+    <button role="tab" id="tab-solenoid" data-tab="solenoid" aria-controls="panel-solenoid" aria-selected="true">Solenoid coil</button>
+    <button role="tab" id="tab-conformal" data-tab="conformal" aria-controls="panel-conformal" aria-selected="false">Conforming coil</button>
+    <button role="tab" id="tab-development" data-tab="development" aria-controls="panel-development" aria-selected="false">Under development</button>
   </nav>
 
   <main>
-    <section id="tab-coil" role="tabpanel" aria-labelledby="btn-coil">
-      <div class="placeholder">
-        <h2>Coil model <span class="badge">Coming soon</span></h2>
-        <p>The 3D model of the coil will appear here.</p>
-      </div>
-      <div class="placeholder">
-        <h2>Coil settings <span class="badge">Coming soon</span></h2>
-        <p>Inner diameter, number of turns, and other coil settings will go here.</p>
+    <section id="panel-solenoid" role="tabpanel" aria-labelledby="tab-solenoid" class="panel">
+      <div class="layout">
+        <div class="side">
+          <p class="lede">A regular cylindrical coil. Enter the coil settings, and the optimiser picks how many turns go in each groove to make the field match your target.</p>
+          <div id="form-solenoid"></div>
+          <div class="actions">
+            <button type="button" class="run primary" id="run-solenoid" data-which="solenoid">Design coil</button>
+            <button type="button" class="reset secondary" data-which="solenoid">Reset to defaults</button>
+          </div>
+          <p class="status" id="status-solenoid" role="status"></p>
+        </div>
+        <div class="results" id="results-solenoid" data-empty="Your winding pattern and graphs will appear here after you design a coil."></div>
       </div>
     </section>
 
-    <section id="tab-about" role="tabpanel" aria-labelledby="btn-about" hidden>
-      <p>This site shows coils generated by our coil design script. Add a short description of the project, the team, and the lab here.</p>
+    <section id="panel-conformal" role="tabpanel" aria-labelledby="tab-conformal" class="panel" hidden>
+      <div class="layout">
+        <div class="side">
+          <p class="lede">A coil that follows the shape of the head. Upload an STL of your phantom and the optimiser makes the field uniform over the anatomy, then compares the result with a plain cylinder.</p>
+          <div id="form-conformal"></div>
+          <div class="actions">
+            <button type="button" class="run primary" id="run-conformal" data-which="conformal">Design coil</button>
+            <button type="button" class="reset secondary" data-which="conformal">Reset to defaults</button>
+          </div>
+          <p class="status" id="status-conformal" role="status"></p>
+        </div>
+        <div class="results" id="results-conformal" data-empty="Upload a phantom STL (or use the built-in test head), then design a coil. The winding pattern and graphs will appear here."></div>
+      </div>
     </section>
 
-    <section id="tab-dev" role="tabpanel" aria-labelledby="btn-dev" hidden>
-      <p class="note">This site is a work in progress. Features listed as "Coming soon" are not working yet.</p>
+    <section id="panel-development" role="tabpanel" aria-labelledby="tab-development" class="panel" hidden>
+      <div class="narrow">
+        <p class="callout">This site is a work in progress. Items marked Coming soon do not work yet.</p>
+        <h2>Coming soon</h2>
+        <ul class="plain">
+          <li><span class="badge">Coming soon</span> Download the former as an STL file</li>
+          <li><span class="badge">Coming soon</span> Upload a separate mesh for just the region to image</li>
+          <li><span class="badge">Coming soon</span> Interactive 3D view of the coil</li>
+          <li><span class="badge">Coming soon</span> Save and reload your coil settings</li>
+        </ul>
+        <h2>How it works</h2>
+        <p>The calculations run on your own computer, inside your browser. Nothing you type or upload is sent to a server. The first visit downloads the Python engine and its libraries, which can take a minute or two. After that, the browser keeps them.</p>
+      </div>
     </section>
   </main>
 
-  <script>
-    // Switch between tabs when a tab button is clicked
-    const tabs = document.querySelectorAll('[role="tab"]');
-    tabs.forEach(function (tab) {
-      tab.addEventListener('click', function () {
-        tabs.forEach(function (t) {
-          const selected = (t === tab);
-          t.setAttribute('aria-selected', selected);
-          document.getElementById(t.getAttribute('aria-controls')).hidden = !selected;
-        });
-      });
-    });
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
