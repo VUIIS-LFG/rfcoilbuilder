@@ -281,16 +281,19 @@ function init() {
   }));
   document.addEventListener('click', (e) => { const b = e.target.closest('[data-csv]'); if (b) downloadCsv(b.dataset.csv); });
 
-  // header motif: wire cross-sections above and below a tube, in the style of the side view graph
-  const turns = [1, 2, 2, -1, 2, 1, -1, 0, -1, 1, 2, -1, 2, 2, 1];
-  let svg = '<line x1="0" y1="30" x2="300" y2="30" stroke="#7a8793" stroke-dasharray="6 4"/><rect x="6" y="19" width="288" height="3" fill="#E69F00"/><rect x="6" y="38" width="288" height="3" fill="#E69F00"/>';
-  turns.forEach((n, i) => {
-    const x = 14 + i * 19.5;
-    const c = n > 0 ? '#0072B2' : '#D55E00';
-    for (let k = 0; k < Math.abs(n); k++) {
-      svg += `<circle cx="${x}" cy="${16 - k * 6}" r="3.2" fill="${c}"/><circle cx="${x}" cy="${44 + k * 6}" r="3.2" fill="${c}"/>`;
+  // header logo: the letters "RF" drawn as wire cross-sections (dots) between two former walls (orange bars)
+  const R = ['11110', '10001', '10001', '11110', '10100', '10010', '10001'];
+  const F = ['11111', '10000', '10000', '11110', '10000', '10000', '10000'];
+  let svg = '<rect x="2" y="1" width="92" height="3" fill="#E69F00"/><rect x="2" y="60" width="92" height="3" fill="#E69F00"/>';
+  for (let row = 0; row < 7; row++) {
+    for (let col = 0; col < 11; col++) {
+      const on = col < 5 ? R[row][col] : col > 5 ? F[row][col - 6] : '0';
+      if (on === '1') svg += `<circle cx="${8 + col * 8}" cy="${10 + row * 7.5}" r="3.1" fill="#0072B2"/>`;
     }
-  });
-  $('#motif').innerHTML = svg;
+  }
+  const logo = $('#motif');
+  logo.setAttribute('viewBox', '0 0 96 64');
+  logo.setAttribute('aria-label', 'RF');
+  logo.innerHTML = svg;
 }
 init();
